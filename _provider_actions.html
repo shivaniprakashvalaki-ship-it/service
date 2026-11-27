@@ -1,0 +1,13 @@
+<form method="post" action="{% url 'booking_action' b.pk %}" class="d-inline-flex flex-wrap gap-1 align-items-center">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  {% if b.status == 'pending' %}
+    <input type="text" name="reason" class="form-control form-control-sm" placeholder="Reason (if rejecting)" style="width:170px" maxlength="255">
+    <button name="action" value="accept" class="btn btn-sm btn-success">Accept</button>
+    <button name="action" value="reject" class="btn btn-sm btn-outline-danger">Reject</button>
+  {% elif b.status == 'accepted' %}
+    <button name="action" value="start" class="btn btn-sm btn-primary">Start job</button>
+  {% elif b.status == 'in_progress' %}
+    <button name="action" value="complete" class="btn btn-sm btn-success">Mark completed</button>
+  {% endif %}
+</form>

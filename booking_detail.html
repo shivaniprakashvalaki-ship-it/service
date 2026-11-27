@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Booking #{{ b.pk }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h1 class="h4 mb-1">Booking #{{ b.pk }} — {{ b.provider_service.category.name }}</h1>
+            <div class="text-muted small">Requested {{ b.created_at|date:"d M Y, H:i" }}</div>
+          </div>
+          <span class="badge fs-6 text-bg-{{ b.badge }}">{{ b.get_status_display }}</span>
+        </div>
+        {% if b.is_emergency %}<div class="alert alert-danger mt-3 py-2 mb-0"><i class="bi bi-exclamation-triangle"></i> Marked as an emergency request.</div>{% endif %}
+        <hr>
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Provider</dt>
+          <dd class="col-sm-8"><a href="{% url 'provider_detail' b.provider_service.provider_id %}">{{ b.provider_service.provider.user.display_name }}</a></dd>
+          {% if is_provider or user.role == 'admin' %}
+            <dt class="col-sm-4">Customer</dt>
+            <dd class="col-sm-8">{{ b.customer.display_name }}{% if b.status == 'accepted' or b.status == 'in_progress' or b.status == 'completed' or user.role == 'admin' %} · {{ b.customer.phone }}{% endif %}</dd>
+          {% endif %}
+          <dt class="col-sm-4">Date &amp; time</dt>
+          <dd class="col-sm-8">{{ b.booking_date|date:"l, d M Y" }} at {{ b.booking_time|time:"H:i" }}</dd>
+          <dt class="col-sm-4">Service address</dt>
+          <dd class="col-sm-8">{% if is_provider and b.status != 'accepted' and b.status != 'in_progress' and b.status != 'completed' %}<span class="text-muted">Shown once you accept the booking.</span>{% else %}{{ b.address|linebreaksbr }}{% endif %}</dd>
+          {% if b.notes %}<dt class="col-sm-4">Notes</dt><dd class="col-sm-8">{{ b.notes|linebreaksbr }}</dd>{% endif %}
+          <dt class="col-sm-4">Charge</dt>
+          <dd class="col-sm-8">₹{{ b.amount|floatformat:"0" }} per visit</dd>
+          {% if b.status == 'rejected' and b.rejection_reason %}<dt class="col-sm-4">Reason for rejection</dt><dd class="col-sm-8">{{ b.rejection_reason }}</dd>{% endif %}
+        </dl>
+
+        {% if review %}
+          <hr>
+          <h2 class="h6">Customer review</h2>
+          <div class="star">{% if review.rating >= 1 %}★{% endif %}{% if review.rating >= 2 %}★{% endif %}{% if review.rating >= 3 %}★{% endif %}{% if review.rating >= 4 %}★{% endif %}{% if review.rating >= 5 %}★{% endif %} {{ review.rating }}/5</div>
+          <div>{{ review.comment|default:"(no comment)" }}</div>
+        {% endif %}
+
+        <hr>
+        <div class="d-flex flex-wrap gap-2">
+          {% if is_provider %}{% include '_provider_actions.html' %}{% endif %}
+          {% if is_customer %}
+            {% if b.can_cancel %}
+              <form method="post" action="{% url 'booking_action' b.pk %}" onsubmit="return confirm('Cancel this booking?');">{% csrf_token %}
+                <button name="action" value="cancel" class="btn btn-outline-danger">Cancel booking</button>
+              </form>
+            {% elif b.status == 'accepted' %}
+              <span class="text-muted small align-self-center">Too close to the start time to cancel online.</span>
+            {% endif %}
+            {% if b.status == 'completed' and not review %}<a class="btn btn-accent" href="{% url 'review_create' b.pk %}">Rate this service</a>{% endif %}
+            <a class="btn btn-outline-secondary" href="{% url 'complaint_create' %}?booking={{ b.pk }}">Raise a complaint</a>
+          {% endif %}
+          <a class="btn btn-link" href="{% if is_provider %}{% url 'provider_bookings' %}{% elif is_customer %}{% url 'customer_dashboard' %}{% else %}{% url 'admin_dashboard' %}{% endif %}">&larr; Back</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

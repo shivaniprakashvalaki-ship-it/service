@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Provider dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">Welcome, {{ user.display_name }}</h1>
+  <a class="btn btn-outline-primary" href="{% url 'provider_detail' p.pk %}"><i class="bi bi-eye"></i> View my public profile</a>
+</div>
+
+{% if p.verification_status == 'pending' %}
+  <div class="alert alert-warning"><strong>Verification pending.</strong> You will appear in customer searches once an administrator approves your documents.
+    {% if not checklist.documents %} <a href="{% url 'provider_manage' 'documents' %}" class="alert-link">Upload your documents now</a>.{% endif %}</div>
+{% elif p.verification_status == 'rejected' %}
+  <div class="alert alert-danger"><strong>Application rejected.</strong> {{ p.admin_remarks }} <a href="{% url 'provider_manage' 'documents' %}" class="alert-link">Upload corrected documents</a> to be reviewed again.</div>
+{% else %}
+  <div class="alert alert-success py-2"><i class="bi bi-patch-check"></i> Your account is verified and visible to customers.</div>
+{% endif %}
+
+{% if not checklist.availability or not checklist.services %}
+  <div class="alert alert-info">
+    Setup checklist:
+    {% if not checklist.services %}<a href="{% url 'provider_manage' 'services' %}">add a service</a> ·{% endif %}
+    {% if not checklist.availability %}<a href="{% url 'provider_manage' 'availability' %}">set your working hours</a> (customers can't book you until you do){% endif %}
+  </div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.pending }}</div><div class="small text-muted">New requests</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.upcoming }}</div><div class="small text-muted">Confirmed / in progress</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">₹{{ stats.earnings|floatformat:"0" }}</div><div class="small text-muted">Earnings ({{ stats.completed }} completed)</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{% if stats.avg %}{{ stats.avg|floatformat:1 }}{% else %}–{% endif %}</div><div class="small text-muted">Rating ({{ stats.reviews }} review{{ stats.reviews|pluralize }})</div></div></div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+  <a class="btn btn-outline-primary btn-sm" href="{% url 'provider_profile' %}">Profile</a>
+  <a class="btn btn-outline-primary btn-sm" href="{% url 'provider_manage' 'services' %}">Services &amp; charges</a>
+  <a class="btn btn-outline-primary btn-sm" href="{% url 'provider_manage' 'availability' %}">Working hours</a>
+  <a class="btn btn-outline-primary btn-sm" href="{% url 'provider_manage' 'areas' %}">Service areas</a>
+  <a class="btn btn-outline-primary btn-sm" href="{% url 'provider_manage' 'documents' %}">Documents</a>
+  <a class="btn btn-outline-primary btn-sm" href="{% url 'provider_bookings' %}">All bookings</a>
+</div>
+
+<h2 class="h5">Booking requests</h2>
+<div class="table-responsive mb-4">
+  <table class="table bg-white border">
+    <thead class="table-light"><tr><th>#</th><th>Customer</th><th>Service</th><th>When</th><th>Address</th><th>Action</th></tr></thead>
+    <tbody>
+      {% for b in pending %}
+        {% include '_booking_row.html' %}
+      {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-3">No pending requests.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2 class="h5">Confirmed &amp; in-progress jobs</h2>
+<div class="table-responsive">
+  <table class="table bg-white border">
+    <thead class="table-light"><tr><th>#</th><th>Customer</th><th>Service</th><th>When</th><th>Address</th><th>Action</th></tr></thead>
+    <tbody>
+      {% for b in upcoming %}
+        {% include '_booking_row.html' %}
+      {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-3">No upcoming jobs.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

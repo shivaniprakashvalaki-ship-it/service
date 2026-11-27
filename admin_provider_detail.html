@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Review {{ p.user.display_name }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card shadow-sm mb-3"><div class="card-body">
+      <h1 class="h4">{{ p.user.display_name }} <span class="badge text-bg-{{ p.badge }}">{{ p.get_verification_status_display }}</span></h1>
+      <dl class="row mb-0">
+        <dt class="col-sm-4">Email</dt><dd class="col-sm-8">{{ p.user.email }}</dd>
+        <dt class="col-sm-4">Phone</dt><dd class="col-sm-8">{{ p.user.phone }}</dd>
+        <dt class="col-sm-4">Location</dt><dd class="col-sm-8">{{ p.locality }}, {{ p.city }} – {{ p.pincode }}</dd>
+        <dt class="col-sm-4">Experience</dt><dd class="col-sm-8">{{ p.experience }} years</dd>
+        <dt class="col-sm-4">About</dt><dd class="col-sm-8">{{ p.description|default:"—" }}</dd>
+        <dt class="col-sm-4">Services</dt>
+        <dd class="col-sm-8">{% for s in services %}{{ s.category.name }} (₹{{ s.charges|floatformat:"0" }}){% if not s.is_active %} [removed]{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</dd>
+        {% if p.admin_remarks %}<dt class="col-sm-4">Last remarks</dt><dd class="col-sm-8">{{ p.admin_remarks }}</dd>{% endif %}
+      </dl>
+    </div></div>
+
+    <div class="card shadow-sm"><div class="card-body">
+      <h2 class="h6">Uploaded documents</h2>
+      <ul class="list-group">
+        {% for d in documents %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ d.get_document_type_display }} <span class="badge text-bg-light border">{{ d.get_status_display }}</span><span class="small text-muted"> · {{ d.uploaded_at|date:"d M Y" }}</span></span>
+            <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="{% url 'document_download' d.pk %}">Open</a>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-muted">No documents uploaded.</li>
+        {% endfor %}
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card shadow-sm mb-3"><div class="card-body">
+      <h2 class="h6">Decision</h2>
+      <form method="post">{% csrf_token %}
+        <textarea name="remarks" rows="3" class="form-control mb-2" placeholder="Remarks (required when rejecting)">{{ p.admin_remarks }}</textarea>
+        <div class="d-flex gap-2">
+          <button name="action" value="approve" class="btn btn-success">Approve</button>
+          <button name="action" value="reject" class="btn btn-outline-danger">Reject</button>
+        </div>
+      </form>
+    </div></div>
+    <div class="card shadow-sm"><div class="card-body">
+      <h2 class="h6">Account</h2>
+      <p class="small text-muted mb-2">Currently: {% if p.user.is_active %}active{% else %}suspended{% endif %}. Suspended users cannot log in and disappear from search.</p>
+      <form method="post">{% csrf_token %}
+        {% if p.user.is_active %}<button name="action" value="suspend" class="btn btn-outline-danger btn-sm">Suspend account</button>{% else %}<button name="action" value="activate" class="btn btn-outline-success btn-sm">Reactivate account</button>{% endif %}
+      </form>
+    </div></div>
+    <a href="{% url 'admin_providers' %}" class="btn btn-link mt-2">&larr; Back to list</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Admin panel{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">Admin panel</h1>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'admin_report' 'bookings' %}"><i class="bi bi-download"></i> Bookings CSV</a>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'admin_report' 'customers' %}"><i class="bi bi-download"></i> Customers CSV</a>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'admin_report' 'providers' %}"><i class="bi bi-download"></i> Providers CSV</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.customers }}</div><div class="small text-muted">Customers</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.providers }}</div><div class="small text-muted">Providers ({{ stats.approved }} approved)</div></div></div>
+  <div class="col-6 col-md-3"><a href="{% url 'admin_providers' %}" class="text-decoration-none"><div class="card stat-card text-center p-3 border-warning"><div class="display-6">{{ stats.pending_verification }}</div><div class="small text-muted">Awaiting verification</div></div></a></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.categories }}</div><div class="small text-muted">Categories</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.bookings }}</div><div class="small text-muted">Total bookings</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.pending_bookings }}</div><div class="small text-muted">Pending bookings</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.completed_bookings }}</div><div class="small text-muted">Completed</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.cancelled_bookings }}</div><div class="small text-muted">Cancelled</div></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-7"><div class="card"><div class="card-body"><h2 class="h6">Bookings per month</h2><canvas id="monthChart" height="130"></canvas></div></div></div>
+  <div class="col-lg-5"><div class="card"><div class="card-body"><h2 class="h6">Most popular services</h2><canvas id="catChart" height="190"></canvas></div></div></div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <h2 class="h6">Highest-rated providers</h2>
+    <ul class="list-group">
+      {% for p in top_providers %}
+        <li class="list-group-item d-flex justify-content-between"><a href="{% url 'admin_provider_detail' p.pk %}" class="text-decoration-none">{{ p.user.display_name }}</a><span><span class="star">★</span> {{ p.avg|floatformat:1 }} ({{ p.n }})</span></li>
+      {% empty %}
+        <li class="list-group-item text-muted">No reviews yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="col-lg-6">
+    <h2 class="h6">Manage data ({{ stats.open_complaints }} open complaint{{ stats.open_complaints|pluralize }})</h2>
+    <div class="list-group">
+      <a class="list-group-item list-group-item-action" href="{% url 'admin_providers' %}">Verify providers &amp; documents</a>
+      <a class="list-group-item list-group-item-action" href="/django-admin/core/user/">Customers &amp; accounts (suspend / reactivate)</a>
+      <a class="list-group-item list-group-item-action" href="/django-admin/core/category/">Service categories</a>
+      <a class="list-group-item list-group-item-action" href="/django-admin/core/booking/">All bookings</a>
+      <a class="list-group-item list-group-item-action" href="/django-admin/core/review/">Reviews (hide inappropriate)</a>
+      <a class="list-group-item list-group-item-action" href="/django-admin/core/complaint/">Complaints</a>
+      <a class="list-group-item list-group-item-action" href="/django-admin/core/contactmessage/">Contact messages</a>
+      <a class="list-group-item list-group-item-action" href="/django-admin/core/notification/">Send / view notifications</a>
+    </div>
+  </div>
+</div>
+{{ chart_data|json_script:"chart-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+  const d = JSON.parse(document.getElementById('chart-data').textContent);
+  new Chart(document.getElementById('monthChart'), {
+    type: 'bar',
+    data: { labels: d.months, datasets: [{ label: 'Bookings', data: d.monthly, backgroundColor: '#1E3A8A' }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+  new Chart(document.getElementById('catChart'), {
+    type: 'doughnut',
+    data: { labels: d.categories, datasets: [{ data: d.category_counts, backgroundColor: ['#1E3A8A','#F59E0B','#3B82F6','#10B981','#EF4444','#8B5CF6'] }] }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,8 @@
+<tr>
+  <td><a href="{% url 'booking_detail' b.pk %}">{{ b.pk }}</a></td>
+  <td>{{ b.customer.display_name }}{% if b.status != 'pending' %}<div class="small text-muted">{{ b.customer.phone }}</div>{% endif %}</td>
+  <td>{{ b.provider_service.category.name }}{% if b.is_emergency %} <span class="badge text-bg-danger">Emergency</span>{% endif %}<div class="small text-muted">₹{{ b.amount|floatformat:"0" }}</div></td>
+  <td>{{ b.booking_date|date:"d M Y" }}<div class="small text-muted">{{ b.booking_time|time:"H:i" }}</div></td>
+  <td class="small">{% if b.status == 'accepted' or b.status == 'in_progress' or b.status == 'completed' %}{{ b.address|truncatechars:60 }}{% else %}<span class="text-muted">Shown after you accept</span>{% endif %}</td>
+  <td>{% include '_provider_actions.html' %}{% if b.status != 'pending' and b.status != 'accepted' and b.status != 'in_progress' %}<span class="badge text-bg-{{ b.badge }}">{{ b.get_status_display }}</span>{% endif %}</td>
+</tr>

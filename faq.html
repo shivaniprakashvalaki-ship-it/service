@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}FAQ{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-8">
+  <h1 class="h3 mb-3">Frequently asked questions</h1>
+  <div class="accordion" id="faq">
+    <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#q1">Do I need an account to book?</button></h2><div id="q1" class="accordion-collapse collapse show" data-bs-parent="#faq"><div class="accordion-body">Yes. Registering is free and lets you track bookings, save favourites and leave reviews.</div></div></div>
+    <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q2">What happens after I send a booking request?</button></h2><div id="q2" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body">It starts as <em>Pending</em>. The provider accepts or rejects it and you are notified. After the job it becomes <em>Completed</em> and you can rate it.</div></div></div>
+    <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q3">Can I cancel a booking?</button></h2><div id="q3" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body">Pending bookings can be cancelled any time. Accepted bookings can be cancelled up to 2 hours before the start time.</div></div></div>
+    <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q4">How are providers verified?</button></h2><div id="q4" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body">Providers upload identity and skill documents which an administrator reviews before the profile goes live.</div></div></div>
+    <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q5">Something went wrong with a job. What now?</button></h2><div id="q5" class="accordion-collapse collapse" data-bs-parent="#faq"><div class="accordion-body">Open the booking and choose <em>Raise a complaint</em>. An administrator will review it.</div></div></div>
+  </div>
+</div></div>
+{% endblock %}

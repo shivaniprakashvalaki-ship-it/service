@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Favourite providers{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Favourite providers</h1>
+<div class="row g-3">
+  {% for fav in items %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm"><div class="card-body">
+        <div class="d-flex gap-3 align-items-center mb-2">
+          {% if fav.provider.photo %}<img class="avatar" src="{{ fav.provider.photo.url }}" alt="">{% else %}<span class="avatar">{{ fav.provider.user.first_name|slice:":1"|upper }}</span>{% endif %}
+          <div>
+            <a class="fw-semibold text-decoration-none" href="{% url 'provider_detail' fav.provider.pk %}">{{ fav.provider.user.display_name }}</a>
+            <div class="small text-muted">{{ fav.provider.locality }}, {{ fav.provider.city }}</div>
+          </div>
+        </div>
+        <div class="mb-2">{% for s in fav.provider.services.all %}{% if s.is_active %}<span class="badge text-bg-light border">{{ s.category.name }}</span> {% endif %}{% endfor %}</div>
+        <form method="post" action="{% url 'favourite_toggle' fav.provider.pk %}">{% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'favourites' %}">
+          <button class="btn btn-sm btn-outline-danger"><i class="bi bi-heart-fill"></i> Remove</button>
+        </form>
+      </div></div>
+    </div>
+  {% empty %}
+    <p class="text-muted">You haven't saved any providers yet. <a href="{% url 'providers' %}">Browse providers</a>.</p>
+  {% endfor %}
+</div>
+{% endblock %}

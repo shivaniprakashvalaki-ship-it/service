@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<ul class="nav nav-tabs mb-4">
+  {% for k, label in tabs %}
+    <li class="nav-item"><a class="nav-link {% if k == kind %}active{% endif %}" href="{% url 'provider_manage' k %}">{{ label }}</a></li>
+  {% endfor %}
+  <li class="nav-item ms-auto"><a class="nav-link" href="{% url 'provider_dashboard' %}">&larr; Dashboard</a></li>
+</ul>
+
+{% if kind == 'availability' %}<p class="text-muted">Customers can only book you inside these hours. Add one row per day (you can add several slots for the same day).</p>{% endif %}
+{% if kind == 'documents' %}
+  <div class="alert alert-info">Upload an identity proof and at least one skill or address document. Admin reviews them before you go live. Files are private: only you and the administrator can open them.</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card shadow-sm"><div class="card-body">
+      <h2 class="h5">{% if kind == 'services' %}Add or update a service{% else %}Add new{% endif %}</h2>
+      <form method="post" enctype="multipart/form-data">{% csrf_token %}
+        {% include '_form_fields.html' %}
+        <button class="btn btn-primary">Save</button>
+      </form>
+    </div></div>
+  </div>
+  <div class="col-lg-7">
+    <ul class="list-group">
+      {% for r in rows %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">{{ r.text }}</div>
+            {% if r.sub %}<div class="small text-muted">{{ r.sub }}</div>{% endif %}
+          </div>
+          <div class="d-flex gap-1">
+            {% if r.url %}<a class="btn btn-sm btn-outline-secondary" href="{{ r.url }}" target="_blank" rel="noopener">Open</a>{% endif %}
+            <form method="post" action="{% url 'provider_delete' kind r.pk %}" onsubmit="return confirm('Remove this entry?');">{% csrf_token %}
+              <button class="btn btn-sm btn-outline-danger">Remove</button>
+            </form>
+          </div>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">Nothing added yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

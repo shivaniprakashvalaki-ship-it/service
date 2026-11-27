@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}My bookings{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Welcome, {{ user.display_name }}</h1>
+  <a class="btn btn-accent" href="{% url 'providers' %}"><i class="bi bi-plus-circle"></i> Book a service</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.total }}</div><div class="small text-muted">Total bookings</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.pending }}</div><div class="small text-muted">Awaiting provider</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.active }}</div><div class="small text-muted">Confirmed / in progress</div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card text-center p-3"><div class="display-6">{{ stats.completed }}</div><div class="small text-muted">Completed</div></div></div>
+</div>
+
+<ul class="nav nav-pills mb-3">
+  <li class="nav-item"><a class="nav-link {% if not status %}active{% endif %}" href="{% url 'customer_dashboard' %}">All</a></li>
+  {% for key, label in statuses %}
+    <li class="nav-item"><a class="nav-link {% if status == key %}active{% endif %}" href="?status={{ key }}">{{ label }}</a></li>
+  {% endfor %}
+</ul>
+
+<div class="table-responsive">
+  <table class="table table-hover bg-white border">
+    <thead class="table-light"><tr><th>#</th><th>Service</th><th>Provider</th><th>When</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for b in bookings %}
+        <tr>
+          <td>{{ b.pk }}</td>
+          <td>{{ b.provider_service.category.name }}{% if b.is_emergency %} <span class="badge text-bg-danger">Emergency</span>{% endif %}</td>
+          <td><a class="text-decoration-none" href="{% url 'provider_detail' b.provider_service.provider_id %}">{{ b.provider_service.provider.user.display_name }}</a></td>
+          <td>{{ b.booking_date|date:"d M Y" }}, {{ b.booking_time|time:"H:i" }}</td>
+          <td>₹{{ b.amount|floatformat:"0" }}</td>
+          <td><span class="badge text-bg-{{ b.badge }}">{{ b.get_status_display }}</span></td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'booking_detail' b.pk %}">View</a>
+            {% if b.status == 'completed' and not b.has_review %}<a class="btn btn-sm btn-accent" href="{% url 'review_create' b.pk %}">Review</a>{% endif %}
+            {% if b.can_cancel %}
+              <form method="post" action="{% url 'booking_action' b.pk %}" class="d-inline" onsubmit="return confirm('Cancel this booking?');">{% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button name="action" value="cancel" class="btn btn-sm btn-outline-danger">Cancel</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7" class="text-center text-muted py-4">No bookings here yet. <a href="{% url 'providers' %}">Find a provider</a>.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

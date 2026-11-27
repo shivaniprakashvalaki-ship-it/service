@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block hero %}
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-6">
+        <h1 class="display-5 fw-bold">Trusted home services, one tap away</h1>
+        <p class="lead">Find verified plumbers, electricians, carpenters, painters and cleaners near you. Compare prices and ratings, then book in minutes.</p>
+        <a href="{% url 'register_provider' %}" class="btn btn-outline-light">Are you a professional? Join us</a>
+      </div>
+      <div class="col-lg-6">
+        <div class="card shadow">
+          <div class="card-body p-4">
+            <h2 class="h5 mb-3">Search for a service</h2>
+            <form method="get" action="{% url 'providers' %}" class="row g-2">
+              <div class="col-12">
+                <select name="category" class="form-select" aria-label="Service">
+                  <option value="">All services</option>
+                  {% for c in categories %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}
+                </select>
+              </div>
+              <div class="col-12">
+                <input type="text" name="location" class="form-control" placeholder="Area, city or PIN code">
+              </div>
+              <div class="col-12 d-grid">
+                <button class="btn btn-accent btn-lg" type="submit"><i class="bi bi-search"></i> Find providers</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<h2 class="h4 mb-3">Popular services</h2>
+<div class="row g-3 mb-5">
+  {% for c in categories %}
+    <div class="col-6 col-md-3">
+      <a class="card cat-card h-100 text-center p-3" href="{% url 'providers' %}?category={{ c.pk }}">
+        <div><span class="cat-icon"><i class="bi {{ c.icon }}"></i></span></div>
+        <div class="fw-semibold mt-2">{{ c.name }}</div>
+        <div class="small text-muted">{{ c.description }}</div>
+      </a>
+    </div>
+  {% empty %}
+    <p class="text-muted">No services yet.</p>
+  {% endfor %}
+</div>
+
+<h2 class="h4 mb-3">How it works</h2>
+<div class="row g-3 mb-5 text-center">
+  <div class="col-md-3"><div class="card h-100 p-3"><div class="display-6 text-brand"><i class="bi bi-search"></i></div><h3 class="h6 mt-2">1. Search</h3><p class="small text-muted mb-0">Pick a service and your locality.</p></div></div>
+  <div class="col-md-3"><div class="card h-100 p-3"><div class="display-6 text-brand"><i class="bi bi-people"></i></div><h3 class="h6 mt-2">2. Compare</h3><p class="small text-muted mb-0">Check ratings, experience and charges.</p></div></div>
+  <div class="col-md-3"><div class="card h-100 p-3"><div class="display-6 text-brand"><i class="bi bi-calendar-check"></i></div><h3 class="h6 mt-2">3. Book</h3><p class="small text-muted mb-0">Choose a date and time; the provider confirms.</p></div></div>
+  <div class="col-md-3"><div class="card h-100 p-3"><div class="display-6 text-brand"><i class="bi bi-star"></i></div><h3 class="h6 mt-2">4. Review</h3><p class="small text-muted mb-0">Rate the job once it is completed.</p></div></div>
+</div>
+
+<h2 class="h4 mb-3">Top-rated professionals</h2>
+<div class="row g-3 mb-5">
+  {% for p in featured %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex gap-3 align-items-center mb-2">
+            {% if p.photo %}<img class="avatar" src="{{ p.photo.url }}" alt="">{% else %}<span class="avatar">{{ p.user.first_name|slice:":1"|upper }}</span>{% endif %}
+            <div>
+              <a class="fw-semibold text-decoration-none" href="{% url 'provider_detail' p.pk %}">{{ p.user.display_name }}</a>
+              <div class="small text-muted"><i class="bi bi-geo-alt"></i> {{ p.locality }}, {{ p.city }}</div>
+              <div class="small">{% if p.avg %}<span class="star">★</span> {{ p.avg|floatformat:1 }} ({{ p.n }}){% else %}<span class="text-muted">No reviews yet</span>{% endif %} · {{ p.experience }} yrs</div>
+            </div>
+          </div>
+          <div>{% for s in p.services.all %}{% if s.is_active %}<span class="badge text-bg-light border">{{ s.category.name }}</span> {% endif %}{% endfor %}</div>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <p class="text-muted">Providers will appear here once approved.</p>
+  {% endfor %}
+</div>
+
+{% if testimonials %}
+<h2 class="h4 mb-3">What customers say</h2>
+<div class="row g-3 mb-4">
+  {% for r in testimonials %}
+    <div class="col-md-4">
+      <div class="card h-100"><div class="card-body">
+        <div class="star">{% if r.rating >= 1 %}★{% endif %}{% if r.rating >= 2 %}★{% endif %}{% if r.rating >= 3 %}★{% endif %}{% if r.rating >= 4 %}★{% endif %}{% if r.rating >= 5 %}★{% endif %}</div>
+        <p class="mb-2">{{ r.comment|default:"Great service!" }}</p>
+        <div class="small text-muted">— {{ r.customer.display_name }}, on {{ r.provider.user.display_name }}</div>
+      </div></div>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

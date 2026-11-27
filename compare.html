@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Compare providers{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Compare providers</h1>
+<div class="table-responsive">
+  <table class="table table-bordered bg-white align-middle text-center">
+    <thead class="table-light">
+      <tr><th></th>{% for s in items %}<th><a class="text-decoration-none" href="{% url 'provider_detail' s.provider_id %}">{{ s.provider.user.display_name }}</a></th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+      <tr><th class="text-start">Service</th>{% for s in items %}<td>{{ s.category.name }}</td>{% endfor %}</tr>
+      <tr><th class="text-start">Charge per visit</th>{% for s in items %}<td class="fw-bold text-brand">₹{{ s.charges|floatformat:"0" }}</td>{% endfor %}</tr>
+      <tr><th class="text-start">Rating</th>{% for s in items %}<td>{% if s.rating %}<span class="star">★</span> {{ s.rating|floatformat:1 }} ({{ s.review_count }}){% else %}—{% endif %}</td>{% endfor %}</tr>
+      <tr><th class="text-start">Experience</th>{% for s in items %}<td>{{ s.provider.experience }} years</td>{% endfor %}</tr>
+      <tr><th class="text-start">Location</th>{% for s in items %}<td>{{ s.provider.locality }}, {{ s.provider.city }}</td>{% endfor %}</tr>
+      <tr><th class="text-start">Details</th>{% for s in items %}<td class="small text-muted">{{ s.description|default:"—" }}</td>{% endfor %}</tr>
+      <tr><th></th>{% for s in items %}<td>{% if not user.is_authenticated or user.role == 'customer' %}<a class="btn btn-primary btn-sm" href="{% url 'book' s.pk %}">Book now</a>{% endif %}</td>{% endfor %}</tr>
+    </tbody>
+  </table>
+</div>
+<a href="{% url 'providers' %}" class="btn btn-link">&larr; Back to search</a>
+{% endblock %}

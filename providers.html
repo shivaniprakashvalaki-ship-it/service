@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}Find providers{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Find service providers</h1>
+
+<form method="get" class="card card-body shadow-sm mb-4">
+  <div class="row g-2">
+    <div class="col-md-3">
+      <label class="form-label small mb-0">Service</label>
+      <select name="category" class="form-select">
+        <option value="">All services</option>
+        {% for c in categories %}<option value="{{ c.pk }}" {% if f.category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small mb-0">Area / city / PIN code</label>
+      <input type="text" name="location" class="form-control" value="{{ f.location }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small mb-0">Name or keyword</label>
+      <input type="text" name="q" class="form-control" value="{{ f.q }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small mb-0">Available on</label>
+      <select name="day" class="form-select">
+        <option value="">Any day</option>
+        {% for num, name in weekdays %}<option value="{{ num }}" {% if f.day == num|stringformat:"s" %}selected{% endif %}>{{ name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small mb-0">Min ₹</label>
+      <input type="number" min="0" name="min_price" class="form-control" value="{{ f.min_price }}">
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small mb-0">Max ₹</label>
+      <input type="number" min="0" name="max_price" class="form-control" value="{{ f.max_price }}">
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-0">Minimum rating</label>
+      <select name="min_rating" class="form-select">
+        <option value="">Any</option>
+        <option value="3" {% if f.min_rating == "3" %}selected{% endif %}>3★ &amp; up</option>
+        <option value="4" {% if f.min_rating == "4" %}selected{% endif %}>4★ &amp; up</option>
+        <option value="4.5" {% if f.min_rating == "4.5" %}selected{% endif %}>4.5★ &amp; up</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-0">Sort by</label>
+      <select name="sort" class="form-select">
+        <option value="rating" {% if f.sort == "rating" or not f.sort %}selected{% endif %}>Highest rated</option>
+        <option value="price" {% if f.sort == "price" %}selected{% endif %}>Price: low to high</option>
+        <option value="price_desc" {% if f.sort == "price_desc" %}selected{% endif %}>Price: high to low</option>
+        <option value="experience" {% if f.sort == "experience" %}selected{% endif %}>Most experienced</option>
+      </select>
+    </div>
+    <div class="col-md-2 d-grid align-items-end">
+      <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Apply</button>
+    </div>
+  </div>
+</form>
+
+<form method="get" action="{% url 'compare' %}">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <span class="text-muted">{{ page.paginator.count }} result{{ page.paginator.count|pluralize }}</span>
+    <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-columns-gap"></i> Compare selected (2–3)</button>
+  </div>
+  <div class="row g-3">
+    {% for s in page %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <span class="badge text-bg-light border">{{ s.category.name }}</span>
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="ids" value="{{ s.pk }}" id="cmp{{ s.pk }}"><label class="form-check-label small" for="cmp{{ s.pk }}">Compare</label></div>
+            </div>
+            <div class="d-flex gap-3 align-items-center my-3">
+              {% if s.provider.photo %}<img class="avatar" src="{{ s.provider.photo.url }}" alt="">{% else %}<span class="avatar">{{ s.provider.user.first_name|slice:":1"|upper }}</span>{% endif %}
+              <div>
+                <a class="fw-semibold text-decoration-none" href="{% url 'provider_detail' s.provider_id %}">{{ s.provider.user.display_name }}</a>
+                <div class="small text-muted"><i class="bi bi-geo-alt"></i> {{ s.provider.locality }}, {{ s.provider.city }}</div>
+                <div class="small">{% if s.rating %}<span class="star">★</span> {{ s.rating|floatformat:1 }} ({{ s.review_count }}){% else %}<span class="text-muted">No reviews yet</span>{% endif %} · {{ s.provider.experience }} yrs</div>
+              </div>
+            </div>
+            {% if s.description %}<p class="small text-muted mb-2">{{ s.description }}</p>{% endif %}
+            <div class="fs-5 fw-bold text-brand">₹{{ s.charges|floatformat:"0" }} <span class="fs-6 fw-normal text-muted">/ visit</span></div>
+          </div>
+          <div class="card-footer bg-white d-flex gap-2">
+            <a class="btn btn-outline-primary btn-sm flex-fill" href="{% url 'provider_detail' s.provider_id %}">Profile</a>
+            {% if not user.is_authenticated or user.role == 'customer' %}
+              <a class="btn btn-primary btn-sm flex-fill" href="{% url 'book' s.pk %}">Book now</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12"><div class="alert alert-info">No providers match your search. Try a different area or remove some filters.</div></div>
+    {% endfor %}
+  </div>
+</form>
+
+{% if page.has_other_pages %}
+<nav class="mt-4" aria-label="Pages">
+  <ul class="pagination justify-content-center">
+    {% if page.has_previous %}<li class="page-item"><a class="page-link" href="?{{ querystring }}&page={{ page.previous_page_number }}">Previous</a></li>{% endif %}
+    <li class="page-item disabled"><span class="page-link">Page {{ page.number }} of {{ page.paginator.num_pages }}</span></li>
+    {% if page.has_next %}<li class="page-item"><a class="page-link" href="?{{ querystring }}&page={{ page.next_page_number }}">Next</a></li>{% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}
